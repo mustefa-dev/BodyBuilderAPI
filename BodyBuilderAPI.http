@@ -1,0 +1,6 @@
+@BodyBuilderAPI_HostAddress = http://localhost:5194
+
+GET {{BodyBuilderAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
