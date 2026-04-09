@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Text;
 using BodyBuilderAPI.DATA;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -6,6 +7,14 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Proxy Forwarded Headers to trust Online Nginx proxy metrics
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear(); 
+});
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -73,6 +82,8 @@ builder.Services.AddAuthentication(options =>
 });
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 // Always use Swagger in Production so you can check your endpoints on clinic.taco5k.site
