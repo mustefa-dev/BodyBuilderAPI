@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/gym_button.dart';
+import '../../../core/widgets/premium.dart';
 import '../../session/data/session_repository.dart';
 import '../data/models.dart';
 import 'plans_provider.dart';
@@ -17,23 +18,57 @@ class PlanDaysScreen extends ConsumerWidget {
     final daysAsync = ref.watch(planDaysProvider(planId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('SELECT DAY')),
-      body: daysAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
+      body: GlowBackground(
+        glow1: AppColors.accent1,
+        child: SafeArea(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Failed to load days', style: TextStyle(color: AppColors.error)),
-              const SizedBox(height: 12),
-              TextButton(onPressed: () => ref.invalidate(planDaysProvider(planId)), child: const Text('Retry')),
+              // Back button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  children: [
+                    IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: AppColors.textSecondary)),
+                    const Spacer(),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Choose Your', style: GoogleFonts.inter(fontSize: 16, color: AppColors.textMuted, fontWeight: FontWeight.w500)),
+                    Text('Workout Day', style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -1.5)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: daysAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline, color: AppColors.error, size: 40),
+                        const SizedBox(height: 12),
+                        const Text('Failed to load', style: TextStyle(color: AppColors.error)),
+                        const SizedBox(height: 8),
+                        TextButton(onPressed: () => ref.invalidate(planDaysProvider(planId)), child: const Text('Retry')),
+                      ],
+                    ),
+                  ),
+                  data: (days) => ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: days.length,
+                    itemBuilder: (context, index) => _DayCard(day: days[index], index: index),
+                  ),
+                ),
+              ),
             ],
           ),
-        ),
-        data: (days) => ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: days.length,
-          itemBuilder: (context, index) => _DayCard(day: days[index]),
         ),
       ),
     );
@@ -42,7 +77,8 @@ class PlanDaysScreen extends ConsumerWidget {
 
 class _DayCard extends ConsumerStatefulWidget {
   final WorkoutDay day;
-  const _DayCard({required this.day});
+  final int index;
+  const _DayCard({required this.day, required this.index});
 
   @override
   ConsumerState<_DayCard> createState() => _DayCardState();
@@ -51,19 +87,25 @@ class _DayCard extends ConsumerStatefulWidget {
 class _DayCardState extends ConsumerState<_DayCard> {
   bool _loading = false;
 
+  static const _gradients = [
+    [Color(0xFF6C63FF), Color(0xFF3B82F6)],
+    [Color(0xFFEF4444), Color(0xFFF59E0B)],
+    [Color(0xFF22C55E), Color(0xFF06B6D4)],
+    [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+    [Color(0xFFF59E0B), Color(0xFFEF4444)],
+  ];
+
   Future<void> _checkIn() async {
     setState(() => _loading = true);
+    HapticFeedback.mediumImpact();
     try {
-      final repo = ref.read(sessionRepositoryProvider);
-      final sessionId = await repo.checkIn(widget.day.id);
+      final sessionId = await ref.read(sessionRepositoryProvider).checkIn(widget.day.id);
       if (mounted) {
         context.go('/workout?sessionId=$sessionId&dayId=${widget.day.id}&title=${Uri.encodeComponent(widget.day.title)}');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to start workout. Try again.')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to start. Try again.')));
         setState(() => _loading = false);
       }
     }
@@ -71,100 +113,110 @@ class _DayCardState extends ConsumerState<_DayCard> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = _gradients[widget.index % _gradients.length];
     final exercisesAsync = ref.watch(dayExercisesProvider(widget.day.id));
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => _showConfirmDialog(context, exercisesAsync),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(
-                    '${widget.day.dayNumber}',
-                    style: GoogleFonts.oswald(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary),
+    return GestureDetector(
+      onTap: () => _showSheet(context, exercisesAsync),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52, height: 52,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: colors),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: colors[0].withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+              ),
+              child: Center(child: Text('${widget.day.dayNumber}', style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white))),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.day.title, style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary, letterSpacing: -0.3)),
+                  const SizedBox(height: 2),
+                  exercisesAsync.when(
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (ex) => Text('${ex.length} exercises', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted)),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.day.title, style: Theme.of(context).textTheme.headlineSmall),
-                    const SizedBox(height: 4),
-                    Text('Day ${widget.day.dayNumber}', style: Theme.of(context).textTheme.bodyMedium),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right, color: AppColors.textMuted),
-            ],
-          ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white.withValues(alpha: 0.2)),
+          ],
         ),
       ),
     );
   }
 
-  void _showConfirmDialog(BuildContext context, AsyncValue<List<DayExercise>> exercisesAsync) {
+  void _showSheet(BuildContext context, AsyncValue<List<DayExercise>> exercisesAsync) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.day.title, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 16),
-            exercisesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => const Text('Could not load exercises'),
-              data: (exercises) => Column(
-                children: exercises
-                    .map((e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: AppColors.categoryColor(e.category),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(child: Text(e.name, style: const TextStyle(color: AppColors.textPrimary))),
-                              Text('${e.targetSets}x${e.targetReps}', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
-                            ],
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2)))),
+              const SizedBox(height: 20),
+              Text(widget.day.title, style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -1)),
+              const SizedBox(height: 16),
+              exercisesAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (_, __) => const Text('Could not load exercises'),
+                data: (exercises) => Column(
+                  children: exercises.asMap().entries.map((entry) {
+                    final e = entry.value;
+                    final color = AppColors.categoryColor(e.category);
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32, height: 32,
+                            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                            child: Center(child: Text('${entry.key + 1}', style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700))),
                           ),
-                        ))
-                    .toList(),
+                          const SizedBox(width: 12),
+                          Expanded(child: Text(e.name, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary))),
+                          Text('${e.targetSets}x${e.targetReps}', style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            GymButton(
-              label: 'CHECK IN',
-              icon: Icons.play_arrow,
-              color: AppColors.success,
-              isLoading: _loading,
-              onPressed: _checkIn,
-            ),
-          ],
+              const SizedBox(height: 24),
+              GradientButton(
+                label: 'Start Workout',
+                icon: Icons.play_arrow_rounded,
+                gradient: AppColors.successGradient,
+                isLoading: _loading,
+                height: 60,
+                onPressed: _checkIn,
+              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+            ],
+          ),
         ),
       ),
     );

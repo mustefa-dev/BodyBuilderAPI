@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/premium.dart';
 import '../../plans/data/models.dart';
 import '../../plans/presentation/plans_provider.dart';
 import '../data/session_models.dart';
@@ -244,7 +245,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('End workout?', style: GoogleFonts.oswald(color: AppColors.textPrimary)),
+        title: Text('End workout?', style: GoogleFonts.inter(color: AppColors.textPrimary)),
         content: Text('$_totalSets sets completed so far.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('CANCEL')),
@@ -316,20 +317,20 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
             children: [
               Icon(Icons.timer_outlined, size: 16, color: tc.withValues(alpha: 0.6)),
               const SizedBox(width: 4),
-              Text(_elapsedStr, style: GoogleFonts.oswald(fontSize: 15, color: tc.withValues(alpha: 0.8))),
+              Text(_elapsedStr, style: GoogleFonts.inter(fontSize: 15, color: tc.withValues(alpha: 0.8))),
             ],
           ),
           const Spacer(),
           // Progress
           Text(
             '${_exIndex + 1}/${_exercises.length}',
-            style: GoogleFonts.oswald(fontSize: 14, color: tc.withValues(alpha: 0.6)),
+            style: GoogleFonts.inter(fontSize: 14, color: tc.withValues(alpha: 0.6)),
           ),
           const SizedBox(width: 12),
           // Finish
           GestureDetector(
             onTap: _checkingOut ? null : _confirmFinish,
-            child: Text('END', style: GoogleFonts.oswald(fontSize: 15, color: tc.withValues(alpha: 0.6))),
+            child: Text('END', style: GoogleFonts.inter(fontSize: 15, color: tc.withValues(alpha: 0.6))),
           ),
         ],
       ),
@@ -351,7 +352,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
           width: current ? 24 : 8,
           height: 6,
           decoration: BoxDecoration(
-            color: done ? AppColors.success : (current ? AppColors.primary : AppColors.surfaceLight),
+            color: done ? AppColors.success : (current ? AppColors.accent2 : AppColors.surfaceLight),
             borderRadius: BorderRadius.circular(3),
           ),
         );
@@ -370,119 +371,129 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
 
     return FadeTransition(
       opacity: _fadeAnim,
-      child: SafeArea(
-        child: Column(
-          children: [
-            _topBar(),
-            _progressDots(),
-            const Spacer(flex: 2),
+      child: GlowBackground(
+        glow1: color,
+        glow2: AppColors.accent2,
+        child: SafeArea(
+          child: Column(
+            children: [
+              _topBar(),
+              _progressDots(),
+              const Spacer(flex: 2),
 
-            // Category
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
-              child: Text(ex.category.toUpperCase(), style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
-            ),
-            const SizedBox(height: 16),
-
-            // Name
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                ex.name,
-                style: GoogleFonts.oswald(fontSize: 30, fontWeight: FontWeight.bold, color: AppColors.textPrimary, height: 1.1),
-                textAlign: TextAlign.center,
+              // Category
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
+                child: Text(ex.category.toUpperCase(), style: GoogleFonts.inter(color: color, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1.5)),
               ),
-            ),
-            const SizedBox(height: 12),
-
-            // Target
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12)),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _miniStat(Icons.repeat, '${ex.targetSets} sets'),
-                  _divider(),
-                  _miniStat(Icons.fitness_center, '${ex.targetReps} reps'),
-                  _divider(),
-                  _miniStat(Icons.timer, '${ex.restTimeMinutes}m rest'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Previous performance
-            if (prevSets.isNotEmpty) ...[
-              Text('LAST SESSION', style: GoogleFonts.oswald(fontSize: 12, color: AppColors.textMuted, letterSpacing: 2)),
-              const SizedBox(height: 8),
-              ...prevSets.map((s) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Text(
-                      'Set ${s.setNumber}:  ${s.weightUsed.toStringAsFixed(1)} kg  x  ${s.repsCompleted} reps',
-                      style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary),
-                    ),
-                  )),
               const SizedBox(height: 16),
-            ],
 
-            // Notes
-            if (ex.notes.isNotEmpty) ...[
+              // Name
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Container(
-                  width: double.infinity,
+                child: Text(
+                  ex.name,
+                  style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary, height: 1.1, letterSpacing: -1),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Target stats
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    StatChip(icon: Icons.repeat, label: '${ex.targetSets} sets', color: color),
+                    _divider(),
+                    StatChip(icon: Icons.fitness_center, label: '${ex.targetReps} reps'),
+                    _divider(),
+                    StatChip(icon: Icons.timer_outlined, label: '${ex.restTimeMinutes}m rest'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Previous performance
+              if (prevSets.isNotEmpty) ...[
+                OverlineLabel('Last Session', color: AppColors.textMuted),
+                const SizedBox(height: 10),
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 32),
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.tips_and_updates, size: 18, color: AppColors.primary),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(ex.notes, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.5)),
+                  child: Column(
+                    children: prevSets.map((s) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Set ${s.setNumber}', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted, fontWeight: FontWeight.w500)),
+                          const SizedBox(width: 12),
+                          Text('${s.weightUsed.toStringAsFixed(1)} kg', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                          Text('  x  ', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted)),
+                          Text('${s.repsCompleted} reps', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                        ],
                       ),
-                    ],
+                    )).toList(),
                   ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Notes
+              if (ex.notes.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: color.withValues(alpha: 0.12)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.tips_and_updates, size: 16, color: color),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(ex.notes, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.5)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
+              const Spacer(flex: 3),
+
+              // START button
+              Padding(
+                padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
+                child: GradientButton(
+                  label: 'Start Exercise',
+                  icon: Icons.arrow_forward_rounded,
+                  height: 64,
+                  onPressed: _startSets,
                 ),
               ),
             ],
-
-            const Spacer(flex: 3),
-
-            // START button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 64,
-                child: ElevatedButton(
-                  onPressed: _startSets,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: Text('START  →', style: GoogleFonts.oswald(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _miniStat(IconData icon, String label) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: AppColors.textMuted),
-        const SizedBox(width: 4),
-        Text(label, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary)),
-      ],
     );
   }
 
@@ -511,18 +522,18 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
             const SizedBox(height: 8),
 
             // Exercise name (small)
-            Text(ex.name, style: GoogleFonts.oswald(fontSize: 16, color: AppColors.textMuted)),
+            Text(ex.name, style: GoogleFonts.inter(fontSize: 16, color: AppColors.textMuted)),
             const SizedBox(height: 4),
 
             // Set indicator
             Text(
               'SET $_setNum  of  ${ex.targetSets}',
-              style: GoogleFonts.oswald(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textPrimary, letterSpacing: 2),
+              style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textPrimary, letterSpacing: 2),
             ),
             const SizedBox(height: 4),
 
             // Target reps
-            Text('Target: ${ex.targetReps} reps', style: GoogleFonts.inter(fontSize: 14, color: AppColors.primary)),
+            Text('Target: ${ex.targetReps} reps', style: GoogleFonts.inter(fontSize: 14, color: AppColors.accent2)),
 
             if (prev != null) ...[
               const SizedBox(height: 4),
@@ -545,8 +556,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
                   height: 12,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: done ? AppColors.success : (current ? AppColors.primary : AppColors.surfaceLight),
-                    border: current ? Border.all(color: AppColors.primary, width: 2) : null,
+                    color: done ? AppColors.success : (current ? AppColors.accent2 : AppColors.surfaceLight),
+                    border: current ? Border.all(color: AppColors.accent2, width: 2) : null,
                   ),
                 );
               }),
@@ -555,7 +566,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
             const Spacer(),
 
             // WEIGHT
-            Text('WEIGHT', style: GoogleFonts.oswald(fontSize: 13, color: AppColors.textMuted, letterSpacing: 2)),
+            Text('WEIGHT', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted, letterSpacing: 2)),
             const SizedBox(height: 8),
             _numberInput(
               controller: _weightCtrl,
@@ -573,7 +584,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
             const SizedBox(height: 24),
 
             // REPS
-            Text('REPS', style: GoogleFonts.oswald(fontSize: 13, color: AppColors.textMuted, letterSpacing: 2)),
+            Text('REPS', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted, letterSpacing: 2)),
             const SizedBox(height: 8),
             _numberInput(
               controller: _repsCtrl,
@@ -629,28 +640,13 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
             // LOG BUTTON
             Padding(
               padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 72,
-                child: ElevatedButton(
-                  onPressed: _isLogging ? null : _logSet,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    disabledBackgroundColor: AppColors.success.withValues(alpha: 0.4),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                    elevation: 4,
-                  ),
-                  child: _isLogging
-                      ? const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.check_circle, size: 28, color: Colors.white),
-                            const SizedBox(width: 10),
-                            Text('DONE', style: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                          ],
-                        ),
-                ),
+              child: GradientButton(
+                label: 'Done',
+                icon: Icons.check_circle_rounded,
+                height: 68,
+                gradient: AppColors.successGradient,
+                isLoading: _isLogging,
+                onPressed: _logSet,
               ),
             ),
           ],
@@ -678,8 +674,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
           child: Container(
             width: 56,
             height: 56,
-            decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16)),
-            child: const Icon(Icons.remove, color: AppColors.textSecondary, size: 28),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            child: const Icon(Icons.remove_rounded, color: AppColors.textSecondary, size: 24),
           ),
         ),
         const SizedBox(width: 16),
@@ -690,10 +690,10 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
             controller: controller,
             keyboardType: TextInputType.numberWithOptions(decimal: decimal),
             textAlign: TextAlign.center,
-            style: GoogleFonts.oswald(fontSize: 48, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            style: GoogleFonts.inter(fontSize: 48, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             decoration: InputDecoration(
               hintText: decimal ? '0.0' : '0',
-              hintStyle: GoogleFonts.oswald(fontSize: 48, color: AppColors.textMuted.withValues(alpha: 0.3)),
+              hintStyle: GoogleFonts.inter(fontSize: 48, color: AppColors.textMuted.withValues(alpha: 0.3)),
               suffixText: suffix.isNotEmpty ? suffix : null,
               suffixStyle: GoogleFonts.inter(fontSize: 18, color: AppColors.textMuted),
               border: InputBorder.none,
@@ -712,8 +712,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
           child: Container(
             width: 56,
             height: 56,
-            decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16)),
-            child: const Icon(Icons.add, color: AppColors.textSecondary, size: 28),
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(color: AppColors.accent1.withValues(alpha: 0.2), blurRadius: 12, offset: const Offset(0, 4))],
+            ),
+            child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
           ),
         ),
       ],
@@ -755,13 +759,13 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
             const Spacer(flex: 2),
 
             // "REST" label
-            Text('REST', style: GoogleFonts.oswald(fontSize: 20, color: Colors.white60, letterSpacing: 6)),
+            Text('REST', style: GoogleFonts.inter(fontSize: 20, color: Colors.white60, letterSpacing: 6)),
             const SizedBox(height: 8),
 
             // Timer
             Text(
               '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}',
-              style: GoogleFonts.oswald(fontSize: 96, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+              style: GoogleFonts.inter(fontSize: 96, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
             ),
             const SizedBox(height: 20),
 
@@ -814,7 +818,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
                           side: const BorderSide(color: Colors.white30),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        child: Text('+15s', style: GoogleFonts.oswald(fontSize: 18, color: Colors.white70)),
+                        child: Text('+15s', style: GoogleFonts.inter(fontSize: 18, color: Colors.white70)),
                       ),
                     ),
                   ),
@@ -830,7 +834,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
                           backgroundColor: Colors.white.withValues(alpha: 0.2),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        child: Text('SKIP REST  →', style: GoogleFonts.oswald(fontSize: 18, color: Colors.white)),
+                        child: Text('SKIP REST  →', style: GoogleFonts.inter(fontSize: 18, color: Colors.white)),
                       ),
                     ),
                   ),

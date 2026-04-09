@@ -2,17 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/gym_button.dart';
+import '../../../core/widgets/premium.dart';
 
 class WorkoutSummaryScreen extends StatelessWidget {
   final double totalDurationMinutes;
   final int totalSets;
 
-  const WorkoutSummaryScreen({
-    super.key,
-    required this.totalDurationMinutes,
-    required this.totalSets,
-  });
+  const WorkoutSummaryScreen({super.key, required this.totalDurationMinutes, required this.totalSets});
 
   String get _formattedDuration {
     final mins = totalDurationMinutes.round();
@@ -23,28 +19,51 @@ class WorkoutSummaryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.emoji_events, size: 80, color: AppColors.gold),
-                const SizedBox(height: 24),
-                Text('WORKOUT COMPLETE!',
-                    style: GoogleFonts.oswald(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                const SizedBox(height: 32),
-                _StatRow(icon: Icons.timer, label: 'Duration', value: _formattedDuration),
-                const SizedBox(height: 16),
-                _StatRow(icon: Icons.fitness_center, label: 'Sets Completed', value: '$totalSets'),
-                const SizedBox(height: 48),
-                GymButton(
-                  label: 'BACK TO HOME',
-                  icon: Icons.home,
-                  onPressed: () => context.go('/'),
-                ),
-              ],
+      body: GlowBackground(
+        glow1: AppColors.gold,
+        glow2: AppColors.success,
+        child: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Trophy with glow
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.goldGradient,
+                      shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(color: AppColors.gold.withValues(alpha: 0.3), blurRadius: 40, spreadRadius: 8)],
+                    ),
+                    child: const Icon(Icons.emoji_events, size: 48, color: Colors.white),
+                  ),
+                  const SizedBox(height: 28),
+                  Text('Workout Complete!', style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -1)),
+                  const SizedBox(height: 6),
+                  Text('Great job pushing through', style: GoogleFonts.inter(fontSize: 15, color: AppColors.textSecondary)),
+                  const SizedBox(height: 40),
+
+                  // Stats
+                  Row(
+                    children: [
+                      Expanded(child: _SummaryCard(icon: Icons.timer_outlined, value: _formattedDuration, label: 'Duration', color: AppColors.accent2)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _SummaryCard(icon: Icons.fitness_center, value: '$totalSets', label: 'Sets', color: AppColors.success)),
+                    ],
+                  ),
+                  const SizedBox(height: 48),
+
+                  GradientButton(
+                    label: 'Back to Home',
+                    icon: Icons.home_rounded,
+                    height: 60,
+                    onPressed: () => context.go('/'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -53,24 +72,34 @@ class WorkoutSummaryScreen extends StatelessWidget {
   }
 }
 
-class _StatRow extends StatelessWidget {
+class _SummaryCard extends StatelessWidget {
   final IconData icon;
-  final String label;
   final String value;
-  const _StatRow({required this.icon, required this.label, required this.value});
+  final String label;
+  final Color color;
+
+  const _SummaryCard({required this.icon, required this.value, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16)),
-      child: Row(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Column(
         children: [
-          Icon(icon, color: AppColors.primary, size: 28),
-          const SizedBox(width: 16),
-          Text(label, style: GoogleFonts.inter(fontSize: 16, color: AppColors.textSecondary)),
-          const Spacer(),
-          Text(value, style: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(height: 12),
+          Text(value, style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -1)),
+          const SizedBox(height: 2),
+          Text(label, style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.w500)),
         ],
       ),
     );

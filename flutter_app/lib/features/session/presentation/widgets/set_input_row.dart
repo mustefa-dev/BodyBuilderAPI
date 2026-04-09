@@ -147,7 +147,7 @@ class _SetInputRowState extends State<SetInputRow> {
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppColors.accent2,
                 padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
