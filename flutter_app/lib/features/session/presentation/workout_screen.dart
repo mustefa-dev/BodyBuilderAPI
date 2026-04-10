@@ -15,7 +15,7 @@ import 'session_provider.dart';
 
 // ====================================================================
 //  STEP-BY-STEP GUIDED WORKOUT
-//  Flow: ExerciseIntro → LogSet → RestTimer → (repeat) → Complete
+//  Flow: ExerciseIntro -> LogSet -> RestTimer -> (repeat) -> Complete
 // ====================================================================
 
 enum WorkoutPhase { loading, exerciseIntro, logSet, resting, finished }
@@ -96,11 +96,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
     super.dispose();
   }
 
-  String get _elapsedStr {
-    final m = _elapsed.inMinutes;
-    final s = _elapsed.inSeconds % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
+  // Elapsed time is tracked for the check-out duration calculation
 
   void _onExercisesLoaded(List<DayExercise> exercises) {
     _exercises = exercises;
@@ -162,9 +158,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
         _totalSets++;
       });
 
-      // What's next?
       if (_isLastSet && _isLastExercise) {
-        // Workout done!
         _finishWorkout();
       } else {
         _startRest();
@@ -244,15 +238,17 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('End workout?', style: GoogleFonts.inter(color: AppColors.textPrimary)),
-        content: Text('$_totalSets sets completed so far.'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text('End workout?', style: GoogleFonts.lexend(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+        content: Text('$_totalSets sets completed so far.', style: GoogleFonts.inter(color: AppColors.textSecondary)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('CANCEL')),
-          ElevatedButton(
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('CANCEL', style: GoogleFonts.inter(color: AppColors.textMuted)),
+          ),
+          TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
-            child: const Text('FINISH'),
+            child: Text('FINISH', style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -268,20 +264,20 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
     final exercisesAsync = ref.watch(dayExercisesProvider(widget.dayId));
 
     return Scaffold(
-      backgroundColor: _phase == WorkoutPhase.resting ? _restColor : AppColors.background,
+      backgroundColor: _phase == WorkoutPhase.resting ? _restBgColor : AppColors.background,
       body: exercisesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
         error: (e, _) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: 12),
-              const Text('Could not load exercises', style: TextStyle(color: AppColors.error)),
+              Text('Could not load exercises', style: GoogleFonts.inter(color: AppColors.error)),
               const SizedBox(height: 12),
-              ElevatedButton(
+              TextButton(
                 onPressed: () => ref.invalidate(dayExercisesProvider(widget.dayId)),
-                child: const Text('RETRY'),
+                child: Text('RETRY', style: GoogleFonts.inter(color: AppColors.primary)),
               ),
             ],
           ),
@@ -289,14 +285,14 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
         data: (exercises) {
           if (_exercises.isEmpty) {
             WidgetsBinding.instance.addPostFrameCallback((_) => _onExercisesLoaded(exercises));
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
           }
           return switch (_phase) {
-            WorkoutPhase.loading => const Center(child: CircularProgressIndicator()),
+            WorkoutPhase.loading => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
             WorkoutPhase.exerciseIntro => _buildIntro(),
             WorkoutPhase.logSet => _buildLogSet(),
             WorkoutPhase.resting => _buildRest(),
-            WorkoutPhase.finished => const Center(child: CircularProgressIndicator()),
+            WorkoutPhase.finished => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
           };
         },
       ),
@@ -304,59 +300,29 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
   }
 
   // ====================================================================
-  //  TOP BAR (shared across phases)
+  //  TOP BAR - KineticLogo + X
   // ====================================================================
-  Widget _topBar({Color? textColor}) {
-    final tc = textColor ?? AppColors.textPrimary;
+  Widget _topBar({Color? iconColor}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
-          // Timer
-          Row(
-            children: [
-              Icon(Icons.timer_outlined, size: 16, color: tc.withValues(alpha: 0.6)),
-              const SizedBox(width: 4),
-              Text(_elapsedStr, style: GoogleFonts.inter(fontSize: 15, color: tc.withValues(alpha: 0.8))),
-            ],
-          ),
+          const KineticLogo(size: 20),
           const Spacer(),
-          // Progress
-          Text(
-            '${_exIndex + 1}/${_exercises.length}',
-            style: GoogleFonts.inter(fontSize: 14, color: tc.withValues(alpha: 0.6)),
-          ),
-          const SizedBox(width: 12),
-          // Finish
           GestureDetector(
             onTap: _checkingOut ? null : _confirmFinish,
-            child: Text('END', style: GoogleFonts.inter(fontSize: 15, color: tc.withValues(alpha: 0.6))),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: (iconColor ?? AppColors.textPrimary).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.close_rounded, color: iconColor ?? AppColors.textSecondary, size: 20),
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  // ====================================================================
-  //  PROGRESS DOTS
-  // ====================================================================
-  Widget _progressDots() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(_exercises.length, (i) {
-        final done = i < _exIndex;
-        final current = i == _exIndex;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          margin: const EdgeInsets.symmetric(horizontal: 3),
-          width: current ? 24 : 8,
-          height: 6,
-          decoration: BoxDecoration(
-            color: done ? AppColors.success : (current ? AppColors.accent2 : AppColors.surfaceLight),
-            borderRadius: BorderRadius.circular(3),
-          ),
-        );
-      }),
     );
   }
 
@@ -368,139 +334,212 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
     final color = AppColors.categoryColor(ex.category);
     final historyAsync = ref.watch(exerciseHistoryProvider(ex.id));
     final prevSets = historyAsync.value ?? [];
+    final completionPct = _exercises.isNotEmpty ? ((_exIndex / _exercises.length) * 100).round() : 0;
 
     return FadeTransition(
       opacity: _fadeAnim,
-      child: GlowBackground(
-        glow1: color,
-        glow2: AppColors.accent2,
-        child: SafeArea(
-          child: Column(
-            children: [
-              _topBar(),
-              _progressDots(),
-              const Spacer(flex: 2),
+      child: SafeArea(
+        child: Column(
+          children: [
+            _topBar(),
 
-              // Category
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
-                child: Text(ex.category.toUpperCase(), style: GoogleFonts.inter(color: color, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1.5)),
+            // Progress line: "EXERCISE 3 OF 6" left, "50% COMPLETE" right
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Text(
+                    'EXERCISE ${_exIndex + 1} OF ${_exercises.length}',
+                    style: GoogleFonts.lexend(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 1),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '$completionPct% COMPLETE',
+                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textMuted),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
 
-              // Name
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Text(
-                  ex.name,
-                  style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary, height: 1.1, letterSpacing: -1),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Target stats
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    StatChip(icon: Icons.repeat, label: '${ex.targetSets} sets', color: color),
-                    _divider(),
-                    StatChip(icon: Icons.fitness_center, label: '${ex.targetReps} reps'),
-                    _divider(),
-                    StatChip(icon: Icons.timer_outlined, label: '${ex.restTimeMinutes}m rest'),
+            // Exercise image area (dark container with gradient + name)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              height: 180,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLow,
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    color.withValues(alpha: 0.15),
+                    AppColors.surfaceLow,
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Previous performance
-              if (prevSets.isNotEmpty) ...[
-                OverlineLabel('Last Session', color: AppColors.textMuted),
-                const SizedBox(height: 10),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 32),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+              child: Stack(
+                children: [
+                  Center(
+                    child: Icon(Icons.fitness_center_rounded, size: 64, color: color.withValues(alpha: 0.25)),
                   ),
-                  child: Column(
-                    children: prevSets.map((s) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        ex.category.toUpperCase(),
+                        style: GoogleFonts.lexend(fontSize: 10, fontWeight: FontWeight.w700, color: color, letterSpacing: 1.5),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Exercise name HUGE
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  ex.name,
+                  style: GoogleFonts.lexend(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.02 * 28,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Three stat boxes: SETS, REPS, REST
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(child: _statBox('SETS', '${ex.targetSets}', color)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _statBox('REPS', ex.targetReps, AppColors.textPrimary)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _statBox('REST', '${ex.restTimeSeconds}s', AppColors.textPrimary)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // LAST TIME card
+            if (prevSets.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SurfaceCard(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceHigh,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Icon(Icons.history_rounded, color: AppColors.textMuted, size: 18),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Set ${s.setNumber}', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted, fontWeight: FontWeight.w500)),
-                          const SizedBox(width: 12),
-                          Text('${s.weightUsed.toStringAsFixed(1)} kg', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-                          Text('  x  ', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted)),
-                          Text('${s.repsCompleted} reps', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                          Text('LAST TIME', style: GoogleFonts.lexend(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 1.5)),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${prevSets.first.weightUsed.toStringAsFixed(0)}kg x ${prevSets.first.repsCompleted} reps',
+                            style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                          ),
                         ],
                       ),
-                    )).toList(),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-              ],
+              ),
+              const SizedBox(height: 10),
+            ],
 
-              // Notes
-              if (ex.notes.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: color.withValues(alpha: 0.12)),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.tips_and_updates, size: 16, color: color),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(ex.notes, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.5)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-
-              const Spacer(flex: 3),
-
-              // START button
+            // COACH TIP
+            if (ex.notes.isNotEmpty) ...[
               Padding(
-                padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
-                child: GradientButton(
-                  label: 'Start Exercise',
-                  icon: Icons.arrow_forward_rounded,
-                  height: 64,
-                  onPressed: _startSets,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SurfaceCard(
+                  color: AppColors.primary.withValues(alpha: 0.06),
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Icon(Icons.lightbulb_outline_rounded, color: AppColors.primary, size: 18),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('COACH TIP', style: GoogleFonts.lexend(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 1.5)),
+                            const SizedBox(height: 4),
+                            Text(ex.notes, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.4)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
-          ),
+
+            const Spacer(),
+
+            // START EXERCISE button
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, MediaQuery.of(context).padding.bottom + 16),
+              child: LimeButton(
+                label: 'START EXERCISE',
+                icon: Icons.arrow_forward_rounded,
+                height: 60,
+                onPressed: _startSets,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _divider() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Container(width: 1, height: 16, color: AppColors.surfaceLight),
+  Widget _statBox(String label, String value, Color valueColor) {
+    return SurfaceCard(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      child: Column(
+        children: [
+          Text(label, style: GoogleFonts.lexend(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 1.5)),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: GoogleFonts.lexend(fontSize: 24, fontWeight: FontWeight.w900, color: valueColor, height: 1),
+          ),
+        ],
+      ),
     );
   }
 
@@ -516,221 +555,277 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
     return FadeTransition(
       opacity: _fadeAnim,
       child: SafeArea(
-        child: Column(
-          children: [
-            _topBar(),
-            const SizedBox(height: 8),
-
-            // Exercise name (small)
-            Text(ex.name, style: GoogleFonts.inter(fontSize: 16, color: AppColors.textMuted)),
-            const SizedBox(height: 4),
-
-            // Set indicator
-            Text(
-              'SET $_setNum  of  ${ex.targetSets}',
-              style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textPrimary, letterSpacing: 2),
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top -
+                  MediaQuery.of(context).padding.bottom,
             ),
-            const SizedBox(height: 4),
+            child: IntrinsicHeight(
+              child: Column(
+                children: [
+                  _topBar(),
 
-            // Target reps
-            Text('Target: ${ex.targetReps} reps', style: GoogleFonts.inter(fontSize: 14, color: AppColors.accent2)),
-
-            if (prev != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                'Last: ${prev.weightUsed.toStringAsFixed(1)} kg x ${prev.repsCompleted}',
-                style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted),
-              ),
-            ],
-
-            // Set dots
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(ex.targetSets, (i) {
-                final done = i + 1 < _setNum;
-                final current = i + 1 == _setNum;
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: done ? AppColors.success : (current ? AppColors.accent2 : AppColors.surfaceLight),
-                    border: current ? Border.all(color: AppColors.accent2, width: 2) : null,
-                  ),
-                );
-              }),
-            ),
-
-            const Spacer(),
-
-            // WEIGHT
-            Text('WEIGHT', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted, letterSpacing: 2)),
-            const SizedBox(height: 8),
-            _numberInput(
-              controller: _weightCtrl,
-              suffix: 'kg',
-              decimal: true,
-              onMinus: () {
-                final v = (double.tryParse(_weightCtrl.text) ?? 0) - 2.5;
-                setState(() => _weightCtrl.text = v.clamp(0, 999).toStringAsFixed(1));
-              },
-              onPlus: () {
-                final v = (double.tryParse(_weightCtrl.text) ?? 0) + 2.5;
-                setState(() => _weightCtrl.text = v.clamp(0, 999).toStringAsFixed(1));
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // REPS
-            Text('REPS', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted, letterSpacing: 2)),
-            const SizedBox(height: 8),
-            _numberInput(
-              controller: _repsCtrl,
-              suffix: '',
-              decimal: false,
-              onMinus: () {
-                final v = (int.tryParse(_repsCtrl.text) ?? 0) - 1;
-                setState(() => _repsCtrl.text = v.clamp(0, 99).toString());
-              },
-              onPlus: () {
-                final v = (int.tryParse(_repsCtrl.text) ?? 0) + 1;
-                setState(() => _repsCtrl.text = v.clamp(0, 99).toString());
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Failure toggle
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                setState(() => _failure = !_failure);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: _failure ? AppColors.error.withValues(alpha: 0.15) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _failure ? AppColors.error : AppColors.textMuted.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _failure ? Icons.local_fire_department : Icons.local_fire_department_outlined,
-                      color: _failure ? AppColors.error : AppColors.textMuted,
-                      size: 20,
+                  // "SET 2 of 3" in lime
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'SET $_setNum of ${ex.targetSets}',
+                        style: GoogleFonts.lexend(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 1),
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Reached failure',
-                      style: TextStyle(color: _failure ? AppColors.error : AppColors.textMuted, fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Exercise name huge bold
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        ex.name,
+                        style: GoogleFonts.lexend(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.02 * 28,
+                          height: 1.1,
+                        ),
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // PREVIOUS BEST with lime bar
+                  if (prev != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: SurfaceCard(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 4,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('PREVIOUS BEST', style: GoogleFonts.lexend(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 1.5)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${prev.weightUsed.toStringAsFixed(0)}kg x ${prev.repsCompleted} reps',
+                                  style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 24),
+
+                  // WEIGHT section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        const SectionLabel('WEIGHT'),
+                        const SizedBox(height: 10),
+                        SurfaceCard(
+                          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                          child: HeavyStepper(
+                            value: _weightCtrl.text.isEmpty ? '0' : _formatWeightWhole(_weightCtrl.text),
+                            unit: '.${_formatWeightDecimal(_weightCtrl.text)}',
+                            onMinus: () {
+                              final v = (double.tryParse(_weightCtrl.text) ?? 0) - 2.5;
+                              setState(() => _weightCtrl.text = v.clamp(0, 999).toStringAsFixed(1));
+                            },
+                            onPlus: () {
+                              final v = (double.tryParse(_weightCtrl.text) ?? 0) + 2.5;
+                              setState(() => _weightCtrl.text = v.clamp(0, 999).toStringAsFixed(1));
+                            },
+                            extraButtons: [
+                              _quickAdjustBtn('-2.5', () {
+                                final v = (double.tryParse(_weightCtrl.text) ?? 0) - 2.5;
+                                setState(() => _weightCtrl.text = v.clamp(0, 999).toStringAsFixed(1));
+                              }),
+                              const SizedBox(width: 10),
+                              _quickAdjustBtn('+2.5', () {
+                                final v = (double.tryParse(_weightCtrl.text) ?? 0) + 2.5;
+                                setState(() => _weightCtrl.text = v.clamp(0, 999).toStringAsFixed(1));
+                              }),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // TARGET REPS section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        const SectionLabel('TARGET REPS'),
+                        const SizedBox(height: 10),
+                        SurfaceCard(
+                          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                          child: HeavyStepper(
+                            value: _repsCtrl.text.isEmpty ? '0' : _repsCtrl.text,
+                            onMinus: () {
+                              final v = (int.tryParse(_repsCtrl.text) ?? 0) - 1;
+                              setState(() => _repsCtrl.text = v.clamp(0, 99).toString());
+                            },
+                            onPlus: () {
+                              final v = (int.tryParse(_repsCtrl.text) ?? 0) + 1;
+                              setState(() => _repsCtrl.text = v.clamp(0, 99).toString());
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // TO FAILURE toggle
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _failure = !_failure);
+                      },
+                      child: SurfaceCard(
+                        color: _failure ? AppColors.error.withValues(alpha: 0.1) : AppColors.surfaceLow,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: _failure ? AppColors.error.withValues(alpha: 0.15) : AppColors.surfaceHigh,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Icon(
+                                Icons.bolt_rounded,
+                                color: _failure ? AppColors.error : AppColors.textMuted,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'TO FAILURE',
+                                style: GoogleFonts.lexend(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: _failure ? AppColors.error : AppColors.textSecondary,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 44,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                color: _failure ? AppColors.error : AppColors.surfaceHigh,
+                                borderRadius: BorderRadius.circular(13),
+                              ),
+                              child: AnimatedAlign(
+                                duration: const Duration(milliseconds: 200),
+                                alignment: _failure ? Alignment.centerRight : Alignment.centerLeft,
+                                child: Container(
+                                  margin: const EdgeInsets.all(3),
+                                  width: 20,
+                                  height: 20,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.textPrimary,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Decorative dumbbell icon
+                  Icon(Icons.fitness_center_rounded, size: 28, color: AppColors.surfaceHigh),
+
+                  const Spacer(),
+
+                  // DONE button
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(20, 0, 20, MediaQuery.of(context).padding.bottom + 16),
+                    child: LimeButton(
+                      label: 'DONE \u2713',
+                      height: 64,
+                      isLoading: _isLogging,
+                      onPressed: _logSet,
+                    ),
+                  ),
+                ],
               ),
             ),
-
-            const Spacer(),
-
-            // LOG BUTTON
-            Padding(
-              padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
-              child: GradientButton(
-                label: 'Done',
-                icon: Icons.check_circle_rounded,
-                height: 68,
-                gradient: AppColors.successGradient,
-                isLoading: _isLogging,
-                onPressed: _logSet,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _numberInput({
-    required TextEditingController controller,
-    required String suffix,
-    required bool decimal,
-    required VoidCallback onMinus,
-    required VoidCallback onPlus,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Minus
-        GestureDetector(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            onMinus();
-          },
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-            ),
-            child: const Icon(Icons.remove_rounded, color: AppColors.textSecondary, size: 24),
-          ),
+  String _formatWeightWhole(String text) {
+    final v = double.tryParse(text) ?? 0;
+    return v.truncate().toString();
+  }
+
+  String _formatWeightDecimal(String text) {
+    final v = double.tryParse(text) ?? 0;
+    final dec = ((v - v.truncate()) * 10).round();
+    return dec.toString();
+  }
+
+  Widget _quickAdjustBtn(String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceHigh,
+          borderRadius: BorderRadius.circular(6),
         ),
-        const SizedBox(width: 16),
-        // Input
-        SizedBox(
-          width: 150,
-          child: TextField(
-            controller: controller,
-            keyboardType: TextInputType.numberWithOptions(decimal: decimal),
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 48, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              hintText: decimal ? '0.0' : '0',
-              hintStyle: GoogleFonts.inter(fontSize: 48, color: AppColors.textMuted.withValues(alpha: 0.3)),
-              suffixText: suffix.isNotEmpty ? suffix : null,
-              suffixStyle: GoogleFonts.inter(fontSize: 18, color: AppColors.textMuted),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-            ),
-            onTap: () => controller.selection = TextSelection(baseOffset: 0, extentOffset: controller.text.length),
-          ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
         ),
-        const SizedBox(width: 16),
-        // Plus
-        GestureDetector(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            onPlus();
-          },
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: AppColors.accent1.withValues(alpha: 0.2), blurRadius: 12, offset: const Offset(0, 4))],
-            ),
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   // ====================================================================
   //  PHASE 3: REST TIMER
   // ====================================================================
-  Color get _restColor {
-    if (_restRemaining <= 5) return const Color(0xFFB91C1C);
-    if (_restRemaining <= 15) return const Color(0xFFB45309);
-    return const Color(0xFF1E3A5F);
+  Color get _restBgColor {
+    if (_restRemaining <= 5) return AppColors.error.withValues(alpha: 0.15);
+    return AppColors.background;
   }
 
   Widget _buildRest() {
@@ -740,14 +835,19 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
 
     // What comes next
     String nextLabel;
+    String nextRight;
     if (_isLastSet) {
       if (_isLastExercise) {
-        nextLabel = 'WORKOUT COMPLETE!';
+        nextLabel = 'WORKOUT COMPLETE';
+        nextRight = '';
       } else {
-        nextLabel = 'Up next: ${_exercises[_exIndex + 1].name}';
+        nextLabel = _exercises[_exIndex + 1].name;
+        nextRight = 'NEXT EXERCISE';
       }
     } else {
-      nextLabel = 'Next: Set ${_setNum + 1} of ${_ex.targetSets}';
+      final w = _weightCtrl.text.isNotEmpty ? '${double.tryParse(_weightCtrl.text)?.toStringAsFixed(0) ?? ''}kg' : '';
+      nextLabel = 'Set ${_setNum + 1} \u2022 $w';
+      nextRight = 'TARGET ${_ex.targetReps} REPS';
     }
 
     return FadeTransition(
@@ -755,93 +855,165 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
       child: SafeArea(
         child: Column(
           children: [
-            _topBar(textColor: Colors.white),
-            const Spacer(flex: 2),
+            _topBar(iconColor: _restRemaining <= 5 ? AppColors.error : null),
 
-            // "REST" label
-            Text('REST', style: GoogleFonts.inter(fontSize: 20, color: Colors.white60, letterSpacing: 6)),
-            const SizedBox(height: 8),
-
-            // Timer
-            Text(
-              '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}',
-              style: GoogleFonts.inter(fontSize: 96, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+            // "CURRENT SESSION" label, exercise name, "2/5 SETS DONE" right
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SectionLabel('CURRENT SESSION'),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _ex.name,
+                          style: GoogleFonts.lexend(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.02 * 20,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '$_setNum/${_ex.targetSets} SETS DONE',
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Progress bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 64),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 6,
-                  backgroundColor: Colors.white24,
-                  valueColor: const AlwaysStoppedAnimation(Colors.white),
+                  backgroundColor: AppColors.surfaceHigh,
+                  valueColor: AlwaysStoppedAnimation(_restRemaining <= 5 ? AppColors.error : AppColors.primary),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
 
-            // What's next
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                nextLabel,
-                style: GoogleFonts.inter(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w500),
-                textAlign: TextAlign.center,
+            const Spacer(flex: 2),
+
+            // "RESTING" label
+            Text(
+              'RESTING',
+              style: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 3),
+            ),
+            const SizedBox(height: 8),
+
+            // HUGE timer numbers
+            Text(
+              '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}',
+              style: GoogleFonts.lexend(
+                fontSize: 80,
+                fontWeight: FontWeight.w900,
+                color: _restRemaining <= 5 ? AppColors.error : AppColors.textPrimary,
+                height: 1,
+                letterSpacing: -0.02 * 80,
               ),
             ),
 
-            const Spacer(flex: 3),
+            const Spacer(flex: 1),
 
-            // +15s / Skip
+            // UP NEXT card
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: SurfaceCard(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('UP NEXT', style: GoogleFonts.lexend(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 1.5)),
+                          const SizedBox(height: 2),
+                          Text(nextLabel, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                        ],
+                      ),
+                    ),
+                    if (nextRight.isNotEmpty)
+                      Text(nextRight, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textMuted)),
+                  ],
+                ),
+              ),
+            ),
+
+            const Spacer(flex: 2),
+
+            // +15S and SKIP buttons
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  // +15s
                   Expanded(
-                    child: SizedBox(
-                      height: 56,
-                      child: OutlinedButton(
-                        onPressed: () => setState(() {
-                          _restRemaining += 15;
-                          _restTotal += 15;
-                        }),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.white30),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    child: GestureDetector(
+                      onTap: () => setState(() {
+                        _restRemaining += 15;
+                        _restTotal += 15;
+                      }),
+                      child: Container(
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceLow,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text('+15s', style: GoogleFonts.inter(fontSize: 18, color: Colors.white70)),
+                        child: Center(
+                          child: Text('+15S', style: GoogleFonts.lexend(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  // Skip
+                  const SizedBox(width: 10),
                   Expanded(
-                    flex: 2,
-                    child: SizedBox(
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _skipRest,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: 0.2),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    child: GestureDetector(
+                      onTap: _skipRest,
+                      child: Container(
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceLow,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text('SKIP REST  →', style: GoogleFonts.inter(fontSize: 18, color: Colors.white)),
+                        child: Center(
+                          child: Text('SKIP', style: GoogleFonts.lexend(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
+
+            // RESUME TRAINING button
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, MediaQuery.of(context).padding.bottom + 16),
+              child: LimeButton(
+                label: 'RESUME TRAINING',
+                height: 60,
+                onPressed: _skipRest,
+              ),
+            ),
           ],
         ),
       ),

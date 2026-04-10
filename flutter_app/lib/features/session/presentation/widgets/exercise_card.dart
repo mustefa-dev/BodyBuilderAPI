@@ -69,7 +69,7 @@ class _ExerciseCardState extends ConsumerState<ExerciseCard> {
             Row(
               children: [
                 Text('${widget.exercise.targetSets} x ${widget.exercise.targetReps}',
-                    style: GoogleFonts.inter(fontSize: 14, color: AppColors.accent2, fontWeight: FontWeight.w600)),
+                    style: GoogleFonts.inter(fontSize: 14, color: AppColors.primary, fontWeight: FontWeight.w600)),
                 const SizedBox(width: 12),
                 Icon(Icons.timer_outlined, size: 14, color: AppColors.textMuted),
                 const SizedBox(width: 3),
@@ -82,7 +82,7 @@ class _ExerciseCardState extends ConsumerState<ExerciseCard> {
                     child: Icon(
                       _showNotes ? Icons.info : Icons.info_outline,
                       size: 20,
-                      color: _showNotes ? AppColors.accent2 : AppColors.textMuted,
+                      color: _showNotes ? AppColors.primary : AppColors.textMuted,
                     ),
                   ),
               ],
@@ -93,7 +93,7 @@ class _ExerciseCardState extends ConsumerState<ExerciseCard> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.accent2.withValues(alpha: 0.08),
+                  color: AppColors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(widget.exercise.notes,

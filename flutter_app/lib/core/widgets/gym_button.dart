@@ -31,8 +31,8 @@ class GymButton extends StatelessWidget {
                 onPressed?.call();
               },
         style: ElevatedButton.styleFrom(
-          backgroundColor: color ?? AppColors.accent2,
-          disabledBackgroundColor: (color ?? AppColors.accent2).withValues(alpha: 0.5),
+          backgroundColor: color ?? AppColors.primary,
+          disabledBackgroundColor: (color ?? AppColors.primary).withValues(alpha: 0.5),
         ),
         child: isLoading
             ? const SizedBox(

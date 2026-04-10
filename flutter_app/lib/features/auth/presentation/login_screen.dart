@@ -9,7 +9,6 @@ import 'auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
-
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
@@ -21,11 +20,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   CountryCode _country = defaultCountry;
 
   @override
-  void dispose() {
-    _phoneCtrl.dispose();
-    _passCtrl.dispose();
-    super.dispose();
-  }
+  void dispose() { _phoneCtrl.dispose(); _passCtrl.dispose(); super.dispose(); }
 
   Future<void> _login() async {
     final phone = '${_country.dialCode}${_phoneCtrl.text.trim()}';
@@ -38,102 +33,83 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      body: GlowBackground(
-        glow1: AppColors.accent1,
-        glow2: AppColors.accent2,
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: AppColors.accent1.withValues(alpha: 0.3), blurRadius: 30, offset: const Offset(0, 8))],
-                    ),
-                    child: const Icon(Icons.fitness_center, size: 36, color: Colors.white),
-                  ),
-                  const SizedBox(height: 20),
-                  Text('Welcome Back', style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -1.5)),
-                  const SizedBox(height: 6),
-                  Text('Log in to continue your training', style: GoogleFonts.inter(fontSize: 15, color: AppColors.textSecondary)),
-                  const SizedBox(height: 40),
+      backgroundColor: AppColors.surface,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 48),
+              const Center(child: KineticLogo(size: 28)),
+              const SizedBox(height: 48),
+              Text('ATHLETE LOGIN', style: GoogleFonts.lexend(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5)),
+              const SizedBox(height: 6),
+              Text('Access your biometric dashboard', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary)),
+              const SizedBox(height: 36),
 
-                  // Phone
-                  const Align(alignment: Alignment.centerLeft, child: OverlineLabel('Phone Number')),
-                  const SizedBox(height: 8),
-                  PhoneInput(
-                    controller: _phoneCtrl,
-                    onCountryChanged: (c) => _country = c,
-                  ),
-                  const SizedBox(height: 20),
+              const SectionLabel('Phone Number'),
+              const SizedBox(height: 10),
+              PhoneInput(controller: _phoneCtrl, onCountryChanged: (c) => _country = c),
+              const SizedBox(height: 24),
 
-                  // Password
-                  const Align(alignment: Alignment.centerLeft, child: OverlineLabel('Password')),
-                  const SizedBox(height: 8),
-                  GlassInput(
-                    controller: _passCtrl,
-                    hint: 'Enter password',
-                    prefixIcon: Icons.lock_outline,
-                    obscure: _obscure,
-                    textInputAction: TextInputAction.go,
-                    onSubmitted: (_) => _login(),
-                    suffix: IconButton(
+              const SectionLabel('Secure Password'),
+              const SizedBox(height: 10),
+              Container(
+                decoration: BoxDecoration(color: AppColors.surfaceHigh, borderRadius: BorderRadius.circular(12)),
+                child: TextField(
+                  controller: _passCtrl,
+                  obscureText: _obscure,
+                  style: GoogleFonts.inter(fontSize: 16, color: AppColors.textPrimary),
+                  decoration: InputDecoration(
+                    hintText: '••••••••',
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                    suffixIcon: IconButton(
                       icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.textMuted, size: 20),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
+                  onSubmitted: (_) => _login(),
+                ),
+              ),
 
-                  // Error
-                  if (auth.error != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.error_outline, color: AppColors.error, size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(auth.error!, style: GoogleFonts.inter(color: AppColors.error, fontSize: 13, fontWeight: FontWeight.w500))),
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 28),
+              if (auth.error != null) ...[
+                const SizedBox(height: 16),
+                Text(auth.error!, style: GoogleFonts.inter(color: AppColors.error, fontSize: 13, fontWeight: FontWeight.w500)),
+              ],
+              const SizedBox(height: 32),
 
-                  // Login button
-                  GradientButton(
-                    label: 'Log In',
-                    isLoading: auth.isLoading,
-                    onPressed: _login,
-                  ),
-                  const SizedBox(height: 20),
+              LimeButton(label: 'EXECUTE LOGIN', icon: Icons.arrow_forward, isLoading: auth.isLoading, onPressed: _login),
+              const SizedBox(height: 32),
 
-                  // Register link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Don't have an account? ", style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 14)),
-                      GestureDetector(
-                        onTap: () => context.push('/auth/register'),
-                        child: Text('Sign Up', style: GoogleFonts.inter(color: AppColors.accent2, fontSize: 14, fontWeight: FontWeight.w700)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
+              // Divider with text
+              Row(
+                children: [
+                  Expanded(child: Container(height: 1, color: AppColors.surfaceHigh)),
+                  Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Text('NEW RECRUIT?', style: GoogleFonts.lexend(fontSize: 11, color: AppColors.textMuted, letterSpacing: 1.5))),
+                  Expanded(child: Container(height: 1, color: AppColors.surfaceHigh)),
                 ],
               ),
-            ),
+              const SizedBox(height: 24),
+
+              // Register card
+              GestureDetector(
+                onTap: () => context.push('/auth/register'),
+                child: SurfaceCard(
+                  color: AppColors.surfaceLow,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Start your journey', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary)),
+                      const SizedBox(width: 12),
+                      Text('Create an account', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),

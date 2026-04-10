@@ -9,7 +9,6 @@ import 'auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
-
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
@@ -22,142 +21,116 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   CountryCode _country = defaultCountry;
 
   @override
-  void dispose() {
-    _nameCtrl.dispose();
-    _phoneCtrl.dispose();
-    _passCtrl.dispose();
-    super.dispose();
-  }
+  void dispose() { _nameCtrl.dispose(); _phoneCtrl.dispose(); _passCtrl.dispose(); super.dispose(); }
 
   Future<void> _register() async {
     final phone = '${_country.dialCode}${_phoneCtrl.text.trim()}';
     final success = await ref.read(authProvider.notifier).register(_nameCtrl.text.trim(), phone, _passCtrl.text);
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account created! Please log in.')));
-      context.pop();
-    }
+    if (success && mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account created!'))); context.pop(); }
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
-
     return Scaffold(
-      body: GlowBackground(
-        glow1: AppColors.accent2,
-        glow2: AppColors.accent1,
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Top bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
+      backgroundColor: AppColors.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(children: [
+                IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: AppColors.textSecondary)),
+                const Spacer(),
+                const KineticLogo(size: 20),
+                const Spacer(),
+                const SizedBox(width: 48),
+              ]),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: AppColors.textSecondary),
+                    const SizedBox(height: 16),
+                    Text('CREATE ACCOUNT', style: GoogleFonts.lexend(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                    const SizedBox(height: 6),
+                    Text('Join the elite ranks of professional performance.', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary)),
+                    const SizedBox(height: 36),
+
+                    const SectionLabel('Full Name'),
+                    const SizedBox(height: 10),
+                    _input(_nameCtrl, 'John Doe', prefixIcon: Icons.person_outline),
+                    const SizedBox(height: 24),
+
+                    const SectionLabel('Phone Number'),
+                    const SizedBox(height: 10),
+                    PhoneInput(controller: _phoneCtrl, onCountryChanged: (c) => _country = c),
+                    const SizedBox(height: 24),
+
+                    const SectionLabel('Secure Password'),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(color: AppColors.surfaceHigh, borderRadius: BorderRadius.circular(12)),
+                      child: TextField(
+                        controller: _passCtrl, obscureText: _obscure,
+                        style: GoogleFonts.inter(fontSize: 16, color: AppColors.textPrimary),
+                        decoration: InputDecoration(
+                          hintText: '••••••••',
+                          prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textMuted, size: 20),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.textMuted, size: 20),
+                            onPressed: () => setState(() => _obscure = !_obscure),
+                          ),
+                        ),
+                      ),
                     ),
-                    const Spacer(),
+
+                    if (auth.error != null) ...[
+                      const SizedBox(height: 16),
+                      Text(auth.error!, style: GoogleFonts.inter(color: AppColors.error, fontSize: 13)),
+                    ],
+                    const SizedBox(height: 32),
+                    LimeButton(label: 'REGISTER ACCOUNT', isLoading: auth.isLoading, onPressed: _register),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: Text.rich(TextSpan(children: [
+                        TextSpan(text: 'By registering, you agree to our ', style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted)),
+                        TextSpan(text: 'Terms of Service', style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                        TextSpan(text: ' and ', style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted)),
+                        TextSpan(text: 'Privacy Policy', style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                      ]), textAlign: TextAlign.center),
+                    ),
+                    const SizedBox(height: 24),
+                    Center(child: Column(children: [
+                      Text('Already have an account?', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary)),
+                      GestureDetector(onTap: () => context.pop(), child: Padding(padding: const EdgeInsets.all(8), child: Text('BACK TO LOGIN', style: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 1)))),
+                    ])),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      Text('Create Account', style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -1.5)),
-                      const SizedBox(height: 6),
-                      Text('Start your fitness journey today', style: GoogleFonts.inter(fontSize: 15, color: AppColors.textSecondary)),
-                      const SizedBox(height: 36),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                      // Full Name
-                      const OverlineLabel('Full Name'),
-                      const SizedBox(height: 8),
-                      GlassInput(
-                        controller: _nameCtrl,
-                        hint: 'Enter your name',
-                        prefixIcon: Icons.person_outline,
-                        keyboardType: TextInputType.name,
-                        textInputAction: TextInputAction.next,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Phone
-                      const OverlineLabel('Phone Number'),
-                      const SizedBox(height: 8),
-                      PhoneInput(
-                        controller: _phoneCtrl,
-                        onCountryChanged: (c) => _country = c,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Password
-                      const OverlineLabel('Password'),
-                      const SizedBox(height: 8),
-                      GlassInput(
-                        controller: _passCtrl,
-                        hint: 'Create a password',
-                        prefixIcon: Icons.lock_outline,
-                        obscure: _obscure,
-                        textInputAction: TextInputAction.go,
-                        onSubmitted: (_) => _register(),
-                        suffix: IconButton(
-                          icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.textMuted, size: 20),
-                          onPressed: () => setState(() => _obscure = !_obscure),
-                        ),
-                      ),
-
-                      // Error
-                      if (auth.error != null) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.error_outline, color: AppColors.error, size: 18),
-                              const SizedBox(width: 8),
-                              Expanded(child: Text(auth.error!, style: GoogleFonts.inter(color: AppColors.error, fontSize: 13, fontWeight: FontWeight.w500))),
-                            ],
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 32),
-
-                      GradientButton(
-                        label: 'Create Account',
-                        isLoading: auth.isLoading,
-                        onPressed: _register,
-                      ),
-                      const SizedBox(height: 20),
-
-                      Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Already have an account? ', style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 14)),
-                            GestureDetector(
-                              onTap: () => context.pop(),
-                              child: Text('Log In', style: GoogleFonts.inter(color: AppColors.accent2, fontSize: 14, fontWeight: FontWeight.w700)),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+  Widget _input(TextEditingController ctrl, String hint, {IconData? prefixIcon}) {
+    return Container(
+      decoration: BoxDecoration(color: AppColors.surfaceHigh, borderRadius: BorderRadius.circular(12)),
+      child: TextField(
+        controller: ctrl,
+        style: GoogleFonts.inter(fontSize: 16, color: AppColors.textPrimary),
+        decoration: InputDecoration(
+          hintText: hint,
+          prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppColors.textMuted, size: 20) : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         ),
       ),
     );

@@ -80,9 +80,8 @@ class _PhoneInputState extends State<PhoneInput> {
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: AppColors.surfaceHigh,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
@@ -92,7 +91,7 @@ class _PhoneInputState extends State<PhoneInput> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                border: Border(right: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+                border: Border(right: BorderSide(color: AppColors.surfaceHigh)),
               ),
               child: Row(
                 children: [
@@ -113,7 +112,7 @@ class _PhoneInputState extends State<PhoneInput> {
               style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.textPrimary, letterSpacing: 1.5),
               decoration: InputDecoration(
                 hintText: 'Phone number',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.25), letterSpacing: 0),
+                hintStyle: TextStyle(color: AppColors.textMuted, letterSpacing: 0),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
               ),
@@ -156,15 +155,14 @@ class _CountrySheetState extends State<_CountrySheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        color: AppColors.surfaceLow,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
           const SizedBox(height: 12),
           // Drag handle
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.surfaceHigh, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 16),
           Text('Select Country', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
           const SizedBox(height: 16),
@@ -173,7 +171,7 @@ class _CountrySheetState extends State<_CountrySheet> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
+                color: AppColors.surfaceHigh,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: TextField(
@@ -182,7 +180,7 @@ class _CountrySheetState extends State<_CountrySheet> {
                 style: GoogleFonts.inter(color: AppColors.textPrimary, fontSize: 15),
                 decoration: InputDecoration(
                   hintText: 'Search country...',
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.25)),
+                  hintStyle: TextStyle(color: AppColors.textMuted),
                   prefixIcon: Icon(Icons.search, color: AppColors.textMuted, size: 20),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 14),
@@ -208,7 +206,7 @@ class _CountrySheetState extends State<_CountrySheet> {
                       Text(c.dialCode, style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary)),
                       if (isSelected) ...[
                         const SizedBox(width: 8),
-                        const Icon(Icons.check_circle, color: AppColors.accent2, size: 20),
+                        const Icon(Icons.check_circle, color: AppColors.primary, size: 20),
                       ],
                     ],
                   ),

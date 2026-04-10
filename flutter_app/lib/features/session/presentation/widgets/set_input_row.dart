@@ -116,7 +116,7 @@ class _SetInputRowState extends State<SetInputRow> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: _failure ? AppColors.error.withValues(alpha: 0.2) : AppColors.surfaceLight,
+                color: _failure ? AppColors.error.withValues(alpha: 0.2) : AppColors.surfaceHigh,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: _failure ? AppColors.error : AppColors.textMuted.withValues(alpha: 0.3)),
               ),
@@ -147,7 +147,7 @@ class _SetInputRowState extends State<SetInputRow> {
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent2,
+                backgroundColor: AppColors.primary,
                 padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
@@ -195,7 +195,7 @@ class _StepperField extends StatelessWidget {
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                   filled: true,
-                  fillColor: AppColors.surfaceLight,
+                  fillColor: AppColors.surfaceHigh,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
                   suffixText: suffix,
                   suffixStyle: const TextStyle(fontSize: 11, color: AppColors.textMuted),
@@ -227,7 +227,7 @@ class _SmallButton extends StatelessWidget {
       child: Container(
         width: 28,
         height: 28,
-        decoration: BoxDecoration(color: AppColors.surfaceLight, borderRadius: BorderRadius.circular(6)),
+        decoration: BoxDecoration(color: AppColors.surfaceHigh, borderRadius: BorderRadius.circular(6)),
         child: Icon(icon, size: 16, color: AppColors.textSecondary),
       ),
     );

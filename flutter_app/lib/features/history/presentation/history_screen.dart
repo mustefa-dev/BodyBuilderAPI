@@ -14,92 +14,175 @@ class HistoryScreen extends ConsumerWidget {
     final historyAsync = ref.watch(historyProvider);
 
     return Scaffold(
-      body: GlowBackground(
-        glow2: AppColors.success,
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                child: Text('History', style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -1.5)),
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: historyAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.error_outline, color: AppColors.error, size: 40),
-                        const SizedBox(height: 12),
-                        TextButton(onPressed: () => ref.invalidate(historyProvider), child: const Text('Retry')),
-                      ],
-                    ),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'WORKOUT\nHISTORY',
+                    style: GoogleFonts.lexend(fontSize: 36, fontWeight: FontWeight.w700, color: AppColors.textPrimary, letterSpacing: -1, height: 1.1),
                   ),
-                  data: (sessions) {
-                    if (sessions.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.history, size: 64, color: Colors.white.withValues(alpha: 0.1)),
-                            const SizedBox(height: 16),
-                            Text('No workouts yet', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textMuted)),
-                            const SizedBox(height: 6),
-                            Text('Your completed sessions will appear here', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textMuted)),
-                          ],
-                        ),
-                      );
-                    }
-                    return ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                      itemCount: sessions.length,
-                      itemBuilder: (context, index) {
-                        final s = sessions[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Review your path to peak performance.',
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ── Stat cards ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: historyAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (sessions) {
+                  final totalVolume = sessions.fold<double>(0, (sum, s) => sum + (s.totalDurationMinutes ?? 0)).round();
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: SurfaceCard(
+                          color: AppColors.surfaceLow,
                           padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-                          ),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width: 44, height: 44,
-                                decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
-                                child: const Icon(Icons.check_rounded, color: AppColors.success, size: 20),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(s.title, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                                    const SizedBox(height: 2),
-                                    Text(DateFormat('EEEE, MMM d - h:mm a').format(s.checkInTime.toLocal()), style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted)),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(color: AppColors.accent2.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-                                child: Text(s.formattedDuration, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.accent2)),
-                              ),
+                              Text('TOTAL VOLUME', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textMuted, letterSpacing: 1)),
+                              const SizedBox(height: 8),
+                              Text('${totalVolume}m', style: GoogleFonts.lexend(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary, height: 1)),
                             ],
                           ),
-                        );
-                      },
-                    );
-                  },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SurfaceCard(
+                          color: AppColors.surfaceLow,
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('WORKOUTS', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textMuted, letterSpacing: 1)),
+                              const SizedBox(height: 8),
+                              Text('${sessions.length}', style: GoogleFonts.lexend(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary, height: 1)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ── Workout list ──
+            Expanded(
+              child: historyAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                error: (e, _) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline, color: AppColors.error, size: 40),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () => ref.invalidate(historyProvider),
+                        child: Text('Retry', style: GoogleFonts.inter(color: AppColors.primary)),
+                      ),
+                    ],
+                  ),
                 ),
+                data: (sessions) {
+                  if (sessions.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.history, size: 64, color: AppColors.textMuted.withValues(alpha: 0.3)),
+                          const SizedBox(height: 16),
+                          Text('No workouts yet', style: GoogleFonts.lexend(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textMuted)),
+                          const SizedBox(height: 6),
+                          Text('Your completed sessions will appear here', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textMuted)),
+                        ],
+                      ),
+                    );
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                    itemCount: sessions.length,
+                    itemBuilder: (context, index) {
+                      final s = sessions[index];
+                      return _HistoryCard(session: s);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HistoryCard extends StatelessWidget {
+  final dynamic session;
+  const _HistoryCard({required this.session});
+
+  @override
+  Widget build(BuildContext context) {
+    final date = DateFormat('EEEE, MMM d').format(session.checkInTime.toLocal()).toUpperCase();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Date in lime
+          Text(
+            date,
+            style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primary, letterSpacing: 1),
+          ),
+          const SizedBox(height: 8),
+          // Workout name + chevron
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  session.title,
+                  style: GoogleFonts.lexend(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 22),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Duration + volume row
+          Row(
+            children: [
+              const Icon(Icons.timer_outlined, size: 14, color: AppColors.textMuted),
+              const SizedBox(width: 4),
+              Text(
+                session.formattedDuration,
+                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

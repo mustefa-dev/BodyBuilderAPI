@@ -59,7 +59,7 @@ class _RestTimerSheetState extends State<RestTimerSheet> {
   Color get _bgColor {
     if (_remaining <= 5) return AppColors.error;
     if (_remaining <= 15) return AppColors.warning;
-    return AppColors.accent2;
+    return AppColors.primary;
   }
 
   @override
