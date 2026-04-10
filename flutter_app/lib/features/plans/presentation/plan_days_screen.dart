@@ -61,7 +61,7 @@ class PlanDaysScreen extends ConsumerWidget {
                 children: [
                   const SizedBox(height: 8),
                   Text(
-                    'WEEK 04',
+                    'SELECT DAY',
                     style: GoogleFonts.lexend(
                       fontSize: 40,
                       fontWeight: FontWeight.w900,
@@ -72,7 +72,7 @@ class PlanDaysScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'PHASE: HYPERTROPHY VOLUME',
+                    '5-DAY FULL BODY PLAN',
                     style: GoogleFonts.lexend(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
