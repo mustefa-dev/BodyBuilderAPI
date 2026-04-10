@@ -82,7 +82,7 @@ class HomeScreen extends ConsumerWidget {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: GestureDetector(
-                      onTap: () => context.go('/workout?sessionId=${session.id}&dayId=${session.workoutDayId}&title=${Uri.encodeComponent('Active Workout')}'),
+                      onTap: () => context.push('/workout?sessionId=${session.id}&dayId=${session.workoutDayId}&title=${Uri.encodeComponent('Active Workout')}'),
                       child: SurfaceCard(
                         color: AppColors.surfaceLow,
                         padding: const EdgeInsets.all(20),
@@ -110,7 +110,7 @@ class HomeScreen extends ConsumerWidget {
                             LimeButton(
                               label: 'RESUME WORKOUT',
                               height: 48,
-                              onPressed: () => context.go('/workout?sessionId=${session.id}&dayId=${session.workoutDayId}&title=${Uri.encodeComponent('Active Workout')}'),
+                              onPressed: () => context.push('/workout?sessionId=${session.id}&dayId=${session.workoutDayId}&title=${Uri.encodeComponent('Active Workout')}'),
                             ),
                           ],
                         ),
@@ -121,40 +121,48 @@ class HomeScreen extends ConsumerWidget {
               ),
 
               // ── Start new workout card ──
-              plansAsync.when(
+              // Only show start if NO active session
+              activeAsync.when(
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
-                data: (plans) {
-                  if (plans.isEmpty) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: GestureDetector(
-                      onTap: () => context.push('/plans/${plans.first.id}/days'),
-                      child: SurfaceCard(
-                        color: AppColors.surfaceLow,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceHigh,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Icon(Icons.add, color: AppColors.primary, size: 24),
+                data: (session) {
+                  if (session != null) return const SizedBox.shrink(); // already has active
+                  return plansAsync.when(
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (plans) {
+                      if (plans.isEmpty) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: GestureDetector(
+                          onTap: () => context.push('/plans/${plans.first.id}/days'),
+                          child: SurfaceCard(
+                            color: AppColors.surfaceLow,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceHigh,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Icon(Icons.add, color: AppColors.primary, size: 24),
+                                ),
+                                const SizedBox(width: 14),
+                                Text(
+                                  'START NEW WORKOUT',
+                                  style: GoogleFonts.lexend(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary, letterSpacing: 0.5),
+                                ),
+                                const Spacer(),
+                                const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 22),
+                              ],
                             ),
-                            const SizedBox(width: 14),
-                            Text(
-                              'START NEW WORKOUT',
-                              style: GoogleFonts.lexend(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary, letterSpacing: 0.5),
-                            ),
-                            const Spacer(),
-                            const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 22),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
               ),

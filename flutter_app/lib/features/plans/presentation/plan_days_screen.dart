@@ -152,7 +152,7 @@ class _StartWorkoutButtonState extends ConsumerState<_StartWorkoutButton> {
     try {
       final sessionId = await ref.read(sessionRepositoryProvider).checkIn(widget.day.id);
       if (mounted) {
-        context.go('/workout?sessionId=$sessionId&dayId=${widget.day.id}&title=${Uri.encodeComponent(widget.day.title)}');
+        context.push('/workout?sessionId=$sessionId&dayId=${widget.day.id}&title=${Uri.encodeComponent(widget.day.title)}');
       }
     } catch (e) {
       if (mounted) {
@@ -197,7 +197,7 @@ class _DayCardState extends ConsumerState<_DayCard> {
       final sessionId = await ref.read(sessionRepositoryProvider).checkIn(widget.day.id);
       if (mounted) {
         Navigator.of(context).pop(); // close bottom sheet
-        context.go('/workout?sessionId=$sessionId&dayId=${widget.day.id}&title=${Uri.encodeComponent(widget.day.title)}');
+        context.push('/workout?sessionId=$sessionId&dayId=${widget.day.id}&title=${Uri.encodeComponent(widget.day.title)}');
       }
     } catch (e) {
       if (mounted) {

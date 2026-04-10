@@ -29,7 +29,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __, navigationShell) => BottomNavShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(routes: [
-            GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+            GoRoute(
+              path: '/',
+              builder: (_, __) => const HomeScreen(),
+              routes: [
+                // Nested under home so back button works
+                GoRoute(
+                  path: 'plans/:planId/days',
+                  builder: (_, state) => PlanDaysScreen(planId: state.pathParameters['planId']!),
+                ),
+              ],
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/history', builder: (_, __) => const HistoryScreen()),
@@ -38,10 +48,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(path: '/records', builder: (_, __) => const PersonalRecordsScreen()),
           ]),
         ],
-      ),
-      GoRoute(
-        path: '/plans/:planId/days',
-        builder: (_, state) => PlanDaysScreen(planId: state.pathParameters['planId']!),
       ),
       GoRoute(
         path: '/workout',

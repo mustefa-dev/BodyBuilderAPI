@@ -220,6 +220,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
     setState(() => _checkingOut = true);
     try {
       final totalMins = await ref.read(sessionRepositoryProvider).checkOut(widget.sessionId);
+      ref.invalidate(activeSessionProvider);
+      ref.invalidate(historyProvider);
       if (mounted) {
         context.go('/workout/summary?duration=${totalMins.toStringAsFixed(1)}&sets=$_totalSets');
       }
