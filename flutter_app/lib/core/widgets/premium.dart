@@ -24,7 +24,7 @@ class KineticLogo extends StatelessWidget {
 }
 
 // ============================================================
-//  LIME CTA BUTTON - gradient lime with dark text
+//  LIME CTA BUTTON
 // ============================================================
 class LimeButton extends StatefulWidget {
   final String label;
@@ -78,7 +78,7 @@ class _LimeButtonState extends State<LimeButton> {
 }
 
 // ============================================================
-//  SECTION LABEL - uppercase muted label
+//  SECTION LABEL
 // ============================================================
 class SectionLabel extends StatelessWidget {
   final String text;
@@ -92,7 +92,7 @@ class SectionLabel extends StatelessWidget {
 }
 
 // ============================================================
-//  SURFACE CARD - no borders, uses background contrast
+//  SURFACE CARD - no borders, background contrast only
 // ============================================================
 class SurfaceCard extends StatelessWidget {
   final Widget child;
@@ -108,26 +108,32 @@ class SurfaceCard extends StatelessWidget {
     return Container(
       margin: margin,
       padding: padding ?? const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color ?? AppColors.surfaceLow,
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
+      decoration: BoxDecoration(color: color ?? AppColors.surfaceLow, borderRadius: BorderRadius.circular(borderRadius)),
       child: child,
     );
   }
 }
 
 // ============================================================
-//  HEAVY STEPPER - oversized +/- for gym use (64x64)
+//  HEAVY STEPPER - tappable number + oversized +/- (64x64)
 // ============================================================
 class HeavyStepper extends StatelessWidget {
-  final String value;
+  final TextEditingController controller;
   final String? unit;
+  final bool decimal;
   final VoidCallback onMinus;
   final VoidCallback onPlus;
   final List<Widget>? extraButtons;
 
-  const HeavyStepper({super.key, required this.value, this.unit, required this.onMinus, required this.onPlus, this.extraButtons});
+  const HeavyStepper({
+    super.key,
+    required this.controller,
+    this.unit,
+    this.decimal = false,
+    required this.onMinus,
+    required this.onPlus,
+    this.extraButtons,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -137,17 +143,29 @@ class HeavyStepper extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _stepBtn(Icons.remove, onMinus),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
+            // Tappable number input
             SizedBox(
-              width: 140,
-              child: Column(
-                children: [
-                  Text(value, style: GoogleFonts.lexend(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textPrimary, height: 1)),
-                  if (unit != null) Text(unit!, style: GoogleFonts.lexend(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.primary)),
-                ],
+              width: 150,
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.numberWithOptions(decimal: decimal),
+                textAlign: TextAlign.center,
+                style: GoogleFonts.lexend(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textPrimary, height: 1),
+                decoration: InputDecoration(
+                  hintText: decimal ? '0.0' : '0',
+                  hintStyle: GoogleFonts.lexend(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textMuted, height: 1),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  suffixText: unit,
+                  suffixStyle: GoogleFonts.lexend(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.primary),
+                ),
+                onTap: () => controller.selection = TextSelection(baseOffset: 0, extentOffset: controller.text.length),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             _stepBtn(Icons.add, onPlus),
           ],
         ),

@@ -643,8 +643,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
                         SurfaceCard(
                           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                           child: HeavyStepper(
-                            value: _weightCtrl.text.isEmpty ? '0' : _formatWeightWhole(_weightCtrl.text),
-                            unit: '.${_formatWeightDecimal(_weightCtrl.text)}',
+                            controller: _weightCtrl,
+                            unit: 'kg',
+                            decimal: true,
                             onMinus: () {
                               final v = (double.tryParse(_weightCtrl.text) ?? 0) - 2.5;
                               setState(() => _weightCtrl.text = v.clamp(0, 999).toStringAsFixed(1));
@@ -681,7 +682,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
                         SurfaceCard(
                           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                           child: HeavyStepper(
-                            value: _repsCtrl.text.isEmpty ? '0' : _repsCtrl.text,
+                            controller: _repsCtrl,
                             onMinus: () {
                               final v = (int.tryParse(_repsCtrl.text) ?? 0) - 1;
                               setState(() => _repsCtrl.text = v.clamp(0, 99).toString());
@@ -787,17 +788,6 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> with TickerProvid
         ),
       ),
     );
-  }
-
-  String _formatWeightWhole(String text) {
-    final v = double.tryParse(text) ?? 0;
-    return v.truncate().toString();
-  }
-
-  String _formatWeightDecimal(String text) {
-    final v = double.tryParse(text) ?? 0;
-    final dec = ((v - v.truncate()) * 10).round();
-    return dec.toString();
   }
 
   Widget _quickAdjustBtn(String label, VoidCallback onTap) {
