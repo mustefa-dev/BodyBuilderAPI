@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/premium.dart';
+import '../../session/data/session_models.dart';
 import '../../session/presentation/session_provider.dart';
 
 class HistoryScreen extends ConsumerWidget {
@@ -136,13 +138,15 @@ class HistoryScreen extends ConsumerWidget {
 }
 
 class _HistoryCard extends StatelessWidget {
-  final dynamic session;
+  final SessionHistory session;
   const _HistoryCard({required this.session});
 
   @override
   Widget build(BuildContext context) {
     final date = DateFormat('EEEE, MMM d').format(session.checkInTime.toLocal()).toUpperCase();
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/history/session/${session.id}'),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -183,6 +187,7 @@ class _HistoryCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }

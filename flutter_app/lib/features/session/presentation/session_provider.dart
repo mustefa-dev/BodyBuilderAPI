@@ -17,3 +17,7 @@ final exerciseHistoryProvider = FutureProvider.family<List<PreviousSet>, String>
 final personalRecordsProvider = FutureProvider<List<PersonalRecord>>((ref) async {
   return ref.watch(sessionRepositoryProvider).getPersonalRecords();
 });
+
+final sessionDetailProvider = FutureProvider.family<SessionDetail, String>((ref, sessionId) async {
+  return ref.watch(sessionRepositoryProvider).getSessionDetails(sessionId);
+});

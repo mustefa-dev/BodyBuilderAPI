@@ -4,6 +4,7 @@ import '../../features/auth/presentation/auth_provider.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/history/presentation/history_screen.dart';
+import '../../features/history/presentation/session_detail_screen.dart';
 import '../../features/home/presentation/bottom_nav_shell.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/plans/presentation/plan_days_screen.dart';
@@ -42,7 +43,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/history', builder: (_, __) => const HistoryScreen()),
+            GoRoute(
+              path: '/history',
+              builder: (_, __) => const HistoryScreen(),
+              routes: [
+                GoRoute(
+                  path: 'session/:sessionId',
+                  builder: (_, state) => SessionDetailScreen(sessionId: state.pathParameters['sessionId']!),
+                ),
+              ],
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/records', builder: (_, __) => const PersonalRecordsScreen()),

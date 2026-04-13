@@ -179,6 +179,27 @@ class _StartWorkoutButtonState extends ConsumerState<_StartWorkoutButton> {
           context.push('/workout?sessionId=${active.id}&dayId=${active.workoutDayId}&title=${Uri.encodeComponent('Active Workout')}');
           return;
         } else {
+          if (!mounted) return;
+          final confirmComplete = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: AppColors.surface,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              title: Text('Complete Previous Workout?', style: GoogleFonts.lexend(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+              content: Text('Starting a new workout will check out and complete your previous session. Are you sure?', style: GoogleFonts.inter(color: AppColors.textSecondary)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text('CANCEL', style: GoogleFonts.inter(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text('COMPLETE & START', style: GoogleFonts.inter(color: AppColors.error, fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ),
+          );
+          if (confirmComplete != true) return;
           setState(() => _loading = true);
           await ref.read(sessionRepositoryProvider).checkOut(active.id);
         }
@@ -257,6 +278,27 @@ class _DayCardState extends ConsumerState<_DayCard> {
           context.push('/workout?sessionId=${active.id}&dayId=${active.workoutDayId}&title=${Uri.encodeComponent('Active Workout')}');
           return;
         } else {
+          if (!mounted) return;
+          final confirmComplete = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: AppColors.surface,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              title: Text('Complete Previous Workout?', style: GoogleFonts.lexend(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+              content: Text('Starting a new workout will check out and complete your previous session. Are you sure?', style: GoogleFonts.inter(color: AppColors.textSecondary)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text('CANCEL', style: GoogleFonts.inter(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text('COMPLETE & START', style: GoogleFonts.inter(color: AppColors.error, fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ),
+          );
+          if (confirmComplete != true) return;
           setState(() => _loading = true);
           await ref.read(sessionRepositoryProvider).checkOut(active.id);
         }

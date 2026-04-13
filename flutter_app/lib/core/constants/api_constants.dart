@@ -16,6 +16,7 @@ class ApiConstants {
   static String checkOut(String sessionId) => '/workoutsessions/$sessionId/check-out';
   static const activeSession = '/workoutsessions/active';
   static const sessionHistory = '/workoutsessions/history';
+  static String sessionDetails(String sessionId) => '/workoutsessions/$sessionId/details';
 
   // Progress
   static String exerciseHistory(String exerciseId) => '/progress/history/$exerciseId';

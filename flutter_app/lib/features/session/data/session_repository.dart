@@ -37,6 +37,11 @@ class SessionRepository {
     }
   }
 
+  Future<SessionDetail> getSessionDetails(String sessionId) async {
+    final response = await _dio.get(ApiConstants.sessionDetails(sessionId));
+    return SessionDetail.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<List<SessionHistory>> getHistory() async {
     final response = await _dio.get(ApiConstants.sessionHistory);
     return (response.data as List).map((e) => SessionHistory.fromJson(e)).toList();

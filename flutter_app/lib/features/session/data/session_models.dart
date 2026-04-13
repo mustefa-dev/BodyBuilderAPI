@@ -97,6 +97,83 @@ class PreviousSet {
   }
 }
 
+class SessionExerciseSet {
+  final int setNumber;
+  final double weightUsed;
+  final int repsCompleted;
+  final bool isFailureReached;
+
+  SessionExerciseSet({
+    required this.setNumber,
+    required this.weightUsed,
+    required this.repsCompleted,
+    required this.isFailureReached,
+  });
+
+  factory SessionExerciseSet.fromJson(Map<String, dynamic> json) {
+    return SessionExerciseSet(
+      setNumber: json['setNumber'] as int,
+      weightUsed: (json['weightUsed'] as num).toDouble(),
+      repsCompleted: json['repsCompleted'] as int,
+      isFailureReached: json['isFailureReached'] as bool? ?? false,
+    );
+  }
+}
+
+class SessionExercise {
+  final String exerciseName;
+  final String? category;
+  final List<SessionExerciseSet> sets;
+
+  SessionExercise({required this.exerciseName, this.category, required this.sets});
+
+  factory SessionExercise.fromJson(Map<String, dynamic> json) {
+    return SessionExercise(
+      exerciseName: json['exerciseName'] as String? ?? 'Exercise',
+      category: json['category'] as String?,
+      sets: (json['sets'] as List).map((e) => SessionExerciseSet.fromJson(e)).toList(),
+    );
+  }
+}
+
+class SessionDetail {
+  final String id;
+  final String title;
+  final DateTime checkInTime;
+  final DateTime? checkOutTime;
+  final double? totalDurationMinutes;
+  final List<SessionExercise> exercises;
+
+  SessionDetail({
+    required this.id,
+    required this.title,
+    required this.checkInTime,
+    this.checkOutTime,
+    this.totalDurationMinutes,
+    required this.exercises,
+  });
+
+  factory SessionDetail.fromJson(Map<String, dynamic> json) {
+    return SessionDetail(
+      id: json['id'] as String,
+      title: json['title'] as String? ?? 'Workout',
+      checkInTime: DateTime.parse(json['checkInTime'] as String),
+      checkOutTime: json['checkOutTime'] != null ? DateTime.parse(json['checkOutTime'] as String) : null,
+      totalDurationMinutes: (json['totalDurationMinutes'] as num?)?.toDouble(),
+      exercises: (json['exercises'] as List).map((e) => SessionExercise.fromJson(e)).toList(),
+    );
+  }
+
+  String get formattedDuration {
+    if (totalDurationMinutes == null) return '--';
+    final mins = totalDurationMinutes!.round();
+    if (mins >= 60) return '${mins ~/ 60}h ${mins % 60}m';
+    return '${mins}m';
+  }
+
+  int get totalSets => exercises.fold(0, (sum, e) => sum + e.sets.length);
+}
+
 class PersonalRecord {
   final String name;
   final double personalBestWeight;

@@ -132,6 +132,46 @@ namespace BodyBuilderAPI.Controllers
             });
         }
 
+        [HttpGet("{sessionId}/details")]
+        public async Task<IActionResult> GetSessionDetails(Guid sessionId)
+        {
+            var userId = GetUserId();
+            var session = await _context.WorkoutSessions
+                .Include(s => s.WorkoutDay)
+                .Include(s => s.Records)
+                    .ThenInclude(r => r.WorkoutDayExercise)
+                        .ThenInclude(wde => wde.Exercise)
+                .FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId);
+
+            if (session == null) return NotFound("Session not found.");
+
+            var exercises = session.Records
+                .GroupBy(r => new { r.WorkoutDayExerciseId, ExerciseName = r.WorkoutDayExercise.Exercise.Name, Category = r.WorkoutDayExercise.Exercise.Category })
+                .Select(g => new
+                {
+                    ExerciseName = g.Key.ExerciseName,
+                    Category = g.Key.Category,
+                    Sets = g.OrderBy(r => r.SetNumber).Select(r => new
+                    {
+                        r.SetNumber,
+                        r.WeightUsed,
+                        r.RepsCompleted,
+                        r.IsFailureReached
+                    }).ToList()
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                session.Id,
+                Title = session.WorkoutDay.Title,
+                session.CheckInTime,
+                session.CheckOutTime,
+                session.TotalDurationMinutes,
+                Exercises = exercises
+            });
+        }
+
         [HttpGet("history")]
         public async Task<IActionResult> GetWorkoutHistory()
         {
