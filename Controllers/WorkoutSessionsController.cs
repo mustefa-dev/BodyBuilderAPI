@@ -24,9 +24,16 @@ namespace BodyBuilderAPI.Controllers
         [HttpPost("check-in")]
         public async Task<IActionResult> CheckIn([FromBody] CheckInDto request)
         {
+            var userId = GetUserId();
+            var existingSession = await _context.WorkoutSessions.FirstOrDefaultAsync(s => s.UserId == userId && s.Status == "InProgress");
+            if (existingSession != null)
+            {
+                return BadRequest("You already have an active workout session.");
+            }
+
             var session = new WorkoutSession
             {
-                UserId = GetUserId(),
+                UserId = userId,
                 WorkoutDayId = request.WorkoutDayId,
                 CheckInTime = DateTime.UtcNow,
                 Status = "InProgress"

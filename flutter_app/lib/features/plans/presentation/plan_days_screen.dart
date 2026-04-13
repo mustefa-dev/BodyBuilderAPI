@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/premium.dart';
 import '../../session/data/session_repository.dart';
+import '../../session/presentation/session_provider.dart';
 import '../data/models.dart';
 import 'plans_provider.dart';
 
@@ -150,8 +152,41 @@ class _StartWorkoutButtonState extends ConsumerState<_StartWorkoutButton> {
     setState(() => _loading = true);
     HapticFeedback.mediumImpact();
     try {
+      final active = await ref.read(sessionRepositoryProvider).getActiveSession();
+      if (active != null && mounted) {
+        setState(() => _loading = false);
+        final resume = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            title: Text('Active Workout Found', style: GoogleFonts.lexend(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+            content: Text('You have an unfinished workout in progress. Do you want to resume it or start this new one?', style: GoogleFonts.inter(color: AppColors.textSecondary)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text('START NEW', style: GoogleFonts.inter(color: AppColors.error, fontWeight: FontWeight.w600)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: Text('RESUME', style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+        );
+        if (resume == null) return;
+        if (resume) {
+          context.push('/workout?sessionId=${active.id}&dayId=${active.workoutDayId}&title=${Uri.encodeComponent('Active Workout')}');
+          return;
+        } else {
+          setState(() => _loading = true);
+          await ref.read(sessionRepositoryProvider).checkOut(active.id);
+        }
+      }
+
       final sessionId = await ref.read(sessionRepositoryProvider).checkIn(widget.day.id);
       if (mounted) {
+        ref.invalidate(activeSessionProvider);
         context.push('/workout?sessionId=$sessionId&dayId=${widget.day.id}&title=${Uri.encodeComponent(widget.day.title)}');
       }
     } catch (e) {
@@ -194,9 +229,43 @@ class _DayCardState extends ConsumerState<_DayCard> {
     setState(() => _loading = true);
     HapticFeedback.mediumImpact();
     try {
+      final active = await ref.read(sessionRepositoryProvider).getActiveSession();
+      if (active != null && mounted) {
+        setState(() => _loading = false);
+        final resume = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            title: Text('Active Workout', style: GoogleFonts.lexend(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+            content: Text('You already have an active session.', style: GoogleFonts.inter(color: AppColors.textSecondary)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text('START OVER', style: GoogleFonts.inter(color: AppColors.error, fontWeight: FontWeight.w600)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: Text('RESUME OLD', style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+        );
+        if (resume == null) return;
+        if (resume) {
+          Navigator.of(context).pop();
+          context.push('/workout?sessionId=${active.id}&dayId=${active.workoutDayId}&title=${Uri.encodeComponent('Active Workout')}');
+          return;
+        } else {
+          setState(() => _loading = true);
+          await ref.read(sessionRepositoryProvider).checkOut(active.id);
+        }
+      }
+
       final sessionId = await ref.read(sessionRepositoryProvider).checkIn(widget.day.id);
       if (mounted) {
         Navigator.of(context).pop(); // close bottom sheet
+        ref.invalidate(activeSessionProvider);
         context.push('/workout?sessionId=$sessionId&dayId=${widget.day.id}&title=${Uri.encodeComponent(widget.day.title)}');
       }
     } catch (e) {
